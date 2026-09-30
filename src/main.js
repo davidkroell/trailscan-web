@@ -1,1 +1,1 @@
-document.querySelector('#app').textContent = 'trailscan'
+import './style.css'
