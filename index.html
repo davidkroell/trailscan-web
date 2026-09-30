@@ -5,17 +5,140 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>trailscan</title>
   </head>
-  <body class="h-screen w-screen overflow-hidden">
+  <body class="h-screen w-screen overflow-hidden" x-data="trailscanApp()">
     <div class="relative flex h-full w-full">
-      <aside class="flex h-full w-96 shrink-0 flex-col overflow-y-auto border-r border-base-300 bg-base-100 p-4">
-        <h1 class="text-xl font-bold">trailscan</h1>
-        <p class="mt-2 text-sm text-base-content/70">
-          Drop a GPX track to find the named features it passes.
-        </p>
+      <aside
+        class="flex h-full shrink-0 flex-col overflow-y-auto border-r border-base-300 bg-base-100 transition-[width] duration-200"
+        :class="sidebarOpen ? 'w-96 p-4' : 'w-0 p-0'"
+      >
+        <div class="min-w-80" x-show="sidebarOpen" x-cloak>
+          <h1 class="text-xl font-bold">trailscan</h1>
+          <p class="mt-1 text-sm text-base-content/70">
+            Drop a GPX track to find the named features it passes.
+          </p>
+
+          <div
+            class="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-box border-2 border-dashed border-base-300 p-6 text-center text-sm"
+            @dragover.prevent
+            @drop.prevent="onDrop($event)"
+            @click="$refs.fileInput.click()"
+          >
+            <template x-if="fileName">
+              <span class="font-medium" x-text="fileName"></span>
+            </template>
+            <template x-if="!fileName">
+              <span>Drag &amp; drop a GPX file here, or click to choose one</span>
+            </template>
+            <input
+              x-ref="fileInput"
+              type="file"
+              accept=".gpx"
+              class="hidden"
+              @change="onFileSelected($event.target.files[0])"
+            />
+          </div>
+
+          <div class="mt-4 flex flex-col gap-3">
+            <label class="form-control">
+              <span class="label-text">Feature set</span>
+              <select class="select select-bordered select-sm" x-model="options.querytemplate">
+                <template x-for="t in queryTemplates" :key="t.value">
+                  <option :value="t.value" x-text="t.label"></option>
+                </template>
+              </select>
+            </label>
+
+            <label class="form-control">
+              <span class="label-text">Max distance (m)</span>
+              <input
+                type="number"
+                min="1"
+                max="1000"
+                class="input input-bordered input-sm"
+                x-model.number="options.max_distance"
+              />
+            </label>
+
+            <label class="form-control">
+              <span class="label-text">Max elevation diff (m)</span>
+              <input
+                type="number"
+                min="1"
+                max="1000"
+                class="input input-bordered input-sm"
+                x-model.number="options.max_elevation_diff"
+              />
+            </label>
+
+            <label class="flex cursor-pointer items-center gap-2">
+              <input type="checkbox" class="checkbox checkbox-sm" x-model="options.simplify_gpx" />
+              <span class="label-text">Simplify GPX (faster)</span>
+            </label>
+          </div>
+
+          <button
+            class="btn btn-primary btn-sm mt-4 w-full"
+            :disabled="!canLoadFeatures"
+            :class="{ 'btn-disabled': !canLoadFeatures }"
+            @click="loadFeatures()"
+          >
+            <span x-show="status === 'loading'" class="loading loading-spinner loading-xs"></span>
+            <span x-text="wasmReady ? 'Load features' : 'Loading WASM…'"></span>
+          </button>
+
+          <p class="mt-2 text-sm text-error" x-show="status === 'error'" x-text="error"></p>
+
+          <template x-if="track">
+            <div class="mt-4 text-sm">
+              <div>Distance: <span x-text="(track.distanceMeters / 1000).toFixed(1)"></span> km</div>
+              <div>Elevation gain: <span x-text="track.elevationGainMeters.toFixed(0)"></span> m</div>
+            </div>
+          </template>
+
+          <template x-if="features.length > 0">
+            <div class="mt-4 flex flex-1 flex-col">
+              <div class="flex items-center justify-between">
+                <h2 class="font-semibold">
+                  Features (<span x-text="features.length"></span>)
+                </h2>
+                <button class="btn btn-ghost btn-xs" @click="exportGpx()">Export GPX</button>
+              </div>
+
+              <ul class="menu mt-1 w-full gap-1 p-0">
+                <template x-for="feature in features" :key="feature.num">
+                  <li>
+                    <div class="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        class="checkbox checkbox-xs"
+                        x-model="feature.included"
+                        @change="toggleFeature(feature)"
+                        @click.stop
+                      />
+                      <button class="flex-1 truncate text-left" @click="selectFeature(feature)">
+                        <span x-text="feature.num"></span>. <span x-text="feature.name || feature.type"></span>
+                        <span class="text-xs text-base-content/60" x-text="'(' + feature.type + ')'"></span>
+                      </button>
+                    </div>
+                  </li>
+                </template>
+              </ul>
+            </div>
+          </template>
+        </div>
       </aside>
 
+      <button
+        class="btn btn-circle btn-sm absolute top-4 left-4 z-[1000]"
+        :class="sidebarOpen ? 'ml-[23.5rem]' : 'ml-0'"
+        @click="sidebarOpen = !sidebarOpen"
+        aria-label="Toggle sidebar"
+      >
+        <span x-text="sidebarOpen ? '‹' : '›'"></span>
+      </button>
+
       <main class="relative h-full flex-1">
-        <div id="map" class="h-full w-full bg-base-200"></div>
+        <div x-ref="map" class="h-full w-full bg-base-200"></div>
 
         <a
           href="https://github.com/davidkroell/trailscan-web"

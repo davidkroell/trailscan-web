@@ -1,6 +1,18 @@
 import L from 'leaflet'
 import 'leaflet-gpx'
 import 'leaflet/dist/leaflet.css'
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
+import markerIcon from 'leaflet/dist/images/marker-icon.png'
+import markerShadow from 'leaflet/dist/images/marker-shadow.png'
+
+// Leaflet's default marker icon URLs are relative and break once bundled;
+// point them at the actual bundled asset URLs instead.
+delete L.Icon.Default.prototype._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+})
 
 // TrailscanMap owns all Leaflet state (map, track layer, feature markers).
 // It is driven imperatively from Alpine state and never mirrored into it.
@@ -27,14 +39,7 @@ export class TrailscanMap {
       const blob = new Blob([gpxText], { type: 'application/gpx+xml' })
       const url = URL.createObjectURL(blob)
 
-      this.trackLayer = new L.GPX(url, {
-        async: true,
-        marker_options: {
-          startIconUrl: null,
-          endIconUrl: null,
-          shadowUrl: null,
-        },
-      })
+      this.trackLayer = new L.GPX(url, { async: true })
         .on('loaded', (e) => {
           URL.revokeObjectURL(url)
           this.map.fitBounds(e.target.getBounds())
