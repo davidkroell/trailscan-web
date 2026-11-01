@@ -4,4 +4,4 @@ node_modules/
 dist/
 public/*
 !public/icon.svg
-!public/og-image.png
+!public/og-image.jpg
