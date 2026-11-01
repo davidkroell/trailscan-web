@@ -14,16 +14,23 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 })
 
+const OSM_TILES = {
+  url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+  options: {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  },
+}
+
 // TrailscanMap owns all Leaflet state (map, track layer, feature markers).
 // It is driven imperatively from Alpine state and never mirrored into it.
 export class TrailscanMap {
   constructor(container) {
-    this.map = L.map(container).setView([47.0, 13.0], 8)
+    this.map = L.map(container, { zoomControl: false }).setView([47.0, 13.0], 8)
+    L.control.zoom({ position: 'bottomright' }).addTo(this.map)
 
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    }).addTo(this.map)
+    this.tileLayer = L.tileLayer(OSM_TILES.url, OSM_TILES.options)
+    this.tileLayer.addTo(this.map)
 
     this.trackLayer = null
     this.markersByNum = new Map()
@@ -39,7 +46,12 @@ export class TrailscanMap {
       const blob = new Blob([gpxText], { type: 'application/gpx+xml' })
       const url = URL.createObjectURL(blob)
 
-      this.trackLayer = new L.GPX(url, { async: true })
+      this.trackLayer = new L.GPX(url, {
+        async: true,
+        polyline_options: { color: '#14b8a6', weight: 5, opacity: 0.9 },
+        markers: { startIcon: false, endIcon: false },
+        gpx_options: { parseElements: ['track'] },
+      })
         .on('loaded', (e) => {
           URL.revokeObjectURL(url)
           this.map.fitBounds(e.target.getBounds())
@@ -53,12 +65,22 @@ export class TrailscanMap {
     })
   }
 
+  clearTrack() {
+    if (this.trackLayer) {
+      this.map.removeLayer(this.trackLayer)
+      this.trackLayer = null
+    }
+  }
+
   setFeatures(features) {
     this.clearFeatures()
 
     for (const feature of features) {
-      const marker = L.marker([feature.lat, feature.lon]).bindPopup(
-        `<strong>${feature.name || feature.type}</strong><br>${feature.type}`,
+      const marker = L.marker([feature.lat, feature.lon], {
+        icon: featureIcon(feature.num),
+        riseOnHover: true,
+      }).bindPopup(
+        `<strong>${feature.name || feature.type}</strong><span style="opacity:.7">${feature.type}</span>`,
       )
       this.markersByNum.set(feature.num, marker)
       marker.addTo(this.map)
@@ -93,4 +115,14 @@ export class TrailscanMap {
     this.map.panTo(marker.getLatLng())
     marker.openPopup()
   }
+}
+
+function featureIcon(num) {
+  return L.divIcon({
+    className: '',
+    html: `<div class="trail-marker"><span>${num}</span></div>`,
+    iconSize: [26, 26],
+    iconAnchor: [13, 26],
+    popupAnchor: [0, -24],
+  })
 }

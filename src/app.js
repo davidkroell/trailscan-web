@@ -9,6 +9,16 @@ export const QUERY_TEMPLATES = [
   { value: 'supplies', label: 'Supplies (water, food, shops)' },
 ]
 
+// Resolves the current theme, mapping legacy stored values ("light"/"dark")
+// to the actual daisyUI theme names used by the CSS.
+function resolveTheme(stored) {
+  if (stored === 'trailscan-dark' || stored === 'dark') return 'trailscan-dark'
+  if (stored === 'trailscan-light' || stored === 'light') return 'trailscan-light'
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'trailscan-dark'
+    : 'trailscan-light'
+}
+
 function escapeXml(value) {
   return String(value ?? '').replace(/[<>&'"]/g, (c) => ({
     '<': '&lt;',
@@ -37,9 +47,11 @@ function buildAnnotatedGpx(originalGpxText, features) {
 export function trailscanApp() {
   return {
     sidebarOpen: true,
+    theme: 'trailscan-light',
     wasmReady: false,
     status: 'idle', // idle | loading | error | done
     error: '',
+    dragOver: false,
 
     fileName: '',
     gpxText: '',
@@ -54,14 +66,28 @@ export function trailscanApp() {
 
     track: null,
     features: [],
+    selectedFeature: null,
 
     map: null,
 
     init() {
+      this.theme = resolveTheme(localStorage.getItem('trailscan-theme'))
+      this.applyTheme(this.theme)
+
       this.map = new TrailscanMap(this.$refs.map)
       whenReady().then(() => {
         this.wasmReady = true
       })
+    },
+
+    toggleTheme() {
+      this.applyTheme(this.theme === 'trailscan-dark' ? 'trailscan-light' : 'trailscan-dark')
+    },
+
+    applyTheme(theme) {
+      this.theme = theme
+      document.documentElement.dataset.theme = theme
+      localStorage.setItem('trailscan-theme', theme)
     },
 
     onFileSelected(file) {
@@ -70,6 +96,7 @@ export function trailscanApp() {
       this.fileName = file.name
       this.status = 'idle'
       this.error = ''
+      this.selectedFeature = null
 
       const reader = new FileReader()
       reader.onload = () => {
@@ -83,6 +110,18 @@ export function trailscanApp() {
       this.onFileSelected(file)
     },
 
+    clearFile() {
+      this.fileName = ''
+      this.gpxText = ''
+      this.status = 'idle'
+      this.error = ''
+      this.track = null
+      this.features = []
+      this.selectedFeature = null
+      this.map?.clearFeatures()
+      this.map?.clearTrack()
+    },
+
     get canLoadFeatures() {
       return this.wasmReady && !!this.gpxText && this.status !== 'loading'
     },
@@ -92,6 +131,7 @@ export function trailscanApp() {
 
       this.status = 'loading'
       this.error = ''
+      this.selectedFeature = null
 
       try {
         const result = await analyze(this.gpxText, this.options)
@@ -114,6 +154,7 @@ export function trailscanApp() {
     },
 
     selectFeature(feature) {
+      this.selectedFeature = feature.num
       this.map.highlightFeature(feature.num)
     },
 
@@ -130,6 +171,19 @@ export function trailscanApp() {
       a.click()
 
       URL.revokeObjectURL(url)
+    },
+
+    typeBadge(type) {
+      const t = String(type ?? '').toLowerCase()
+      if (/peak|summit|mountain|alp/.test(t)) return 'badge-warning'
+      if (/hut|shelter|cabin|hostel|camp/.test(t)) return 'badge-error'
+      if (/lake|spring|water|river|stream|fountain|well/.test(t)) return 'badge-info'
+      if (/saddle|pass|col/.test(t)) return 'badge-success'
+      if (/village|town|city|hamlet|suburb|borough/.test(t)) return 'badge-secondary'
+      if (/viewpoint|view|panorama/.test(t)) return 'badge-accent'
+      if (/shop|cafe|restaurant|food|supply|supermarket|bakery|fuel|pharmacy|bank|atm|post/.test(t))
+        return 'badge-neutral'
+      return 'badge-ghost'
     },
   }
 }
