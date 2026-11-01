@@ -74,7 +74,7 @@ export function trailscanApp() {
       this.theme = resolveTheme(localStorage.getItem('trailscan-theme'))
       this.applyTheme(this.theme)
 
-      this.map = new TrailscanMap(this.$refs.map)
+      this.map = new TrailscanMap(this.$refs.map, this.theme)
       whenReady().then(() => {
         this.wasmReady = true
       })
@@ -88,6 +88,7 @@ export function trailscanApp() {
       this.theme = theme
       document.documentElement.dataset.theme = theme
       localStorage.setItem('trailscan-theme', theme)
+      this.map?.setTheme(theme)
     },
 
     onFileSelected(file) {
@@ -97,10 +98,16 @@ export function trailscanApp() {
       this.status = 'idle'
       this.error = ''
       this.selectedFeature = null
+      this.track = null
+      this.features = []
+      this.map?.clearFeatures()
 
       const reader = new FileReader()
       reader.onload = () => {
         this.gpxText = reader.result
+        this.map?.loadTrack(this.gpxText).catch((err) => {
+          this.error = err?.message ?? String(err)
+        })
       }
       reader.readAsText(file)
     },
@@ -139,7 +146,6 @@ export function trailscanApp() {
         this.track = result.track
         this.features = (result.features ?? []).map((f) => ({ ...f, included: true }))
 
-        await this.map.loadTrack(this.gpxText)
         this.map.setFeatures(this.features)
 
         this.status = 'done'

@@ -22,10 +22,16 @@ const OSM_TILES = {
   },
 }
 
+const TRACK_COLORS = {
+  light: '#6331fb', // electric indigo — visible on light tiles
+  dark: '#88f9c0', // tropical mint — visible on dark tiles
+}
+
 // TrailscanMap owns all Leaflet state (map, track layer, feature markers).
 // It is driven imperatively from Alpine state and never mirrored into it.
 export class TrailscanMap {
-  constructor(container) {
+  constructor(container, theme = 'light') {
+    this.theme = theme
     this.map = L.map(container, { zoomControl: false }).setView([47.0, 13.0], 8)
     L.control.zoom({ position: 'bottomright' }).addTo(this.map)
 
@@ -34,6 +40,10 @@ export class TrailscanMap {
 
     this.trackLayer = null
     this.markersByNum = new Map()
+  }
+
+  setTheme(theme) {
+    this.theme = theme
   }
 
   loadTrack(gpxText) {
@@ -48,7 +58,11 @@ export class TrailscanMap {
 
       this.trackLayer = new L.GPX(url, {
         async: true,
-        polyline_options: { color: '#14b8a6', weight: 5, opacity: 0.9 },
+        polyline_options: {
+          color: TRACK_COLORS[this.theme] ?? TRACK_COLORS.light,
+          weight: 5,
+          opacity: 0.9,
+        },
         markers: { startIcon: false, endIcon: false },
         gpx_options: { parseElements: ['track'] },
       })

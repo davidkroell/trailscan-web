@@ -6,7 +6,7 @@
     <title>trailscan — GPX trail feature finder</title>
     <link
       rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230d9488' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m8 3 4 8 5-5 5 15H2L8 3z'/%3E%3C/svg%3E"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236331fb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m8 3 4 8 5-5 5 15H2L8 3z'/%3E%3C/svg%3E"
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -32,10 +32,10 @@
 
       <!-- Floating sidebar -->
       <aside
-        class="absolute top-4 left-4 bottom-4 z-[1000] w-[22rem] overflow-hidden rounded-3xl border border-base-300/60 bg-base-100/85 shadow-2xl shadow-black/10 backdrop-blur-xl transition-all duration-300 ease-out"
+        class="absolute top-4 left-4 bottom-4 z-[1000] w-[24rem] overflow-hidden rounded-3xl border border-base-300/60 bg-base-100/85 shadow-2xl shadow-black/10 backdrop-blur-xl transition-all duration-300 ease-out"
         :class="sidebarOpen ? 'translate-x-0 opacity-100' : '-translate-x-8 opacity-0 pointer-events-none'"
       >
-        <div class="flex h-full w-[22rem] flex-col gap-5 overflow-y-auto p-5 scrollbar-thin">
+        <div class="flex h-full w-[24rem] flex-col gap-5 overflow-y-auto p-5 scrollbar-thin">
           <header class="flex items-center gap-3">
             <div
               class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent text-primary-content shadow-lg shadow-primary/30"
@@ -55,7 +55,7 @@
             <div class="min-w-0">
               <h1 class="text-lg leading-tight font-bold tracking-tight">trailscan</h1>
               <p class="truncate text-xs text-base-content/60">
-                Find the named features your GPX track passes
+                GPX trail feature finder
               </p>
             </div>
           </header>
@@ -209,9 +209,9 @@
           </div>
 
           <button
-            class="btn btn-primary shadow-lg shadow-primary/25"
+            class="btn btn-primary"
             :disabled="!canLoadFeatures"
-            :class="{ 'btn-disabled': !canLoadFeatures }"
+            :class="{ 'btn-disabled': !canLoadFeatures, 'shadow-lg shadow-primary/25': canLoadFeatures }"
             @click="loadFeatures()"
           >
             <span x-show="status === 'loading'" class="loading loading-spinner loading-xs"></span>
@@ -324,7 +324,7 @@
       <!-- Sidebar toggle -->
       <button
         class="absolute top-4 z-[1001] btn btn-circle btn-sm border border-base-300/60 bg-base-100/80 text-base-content shadow-lg backdrop-blur-xl transition-all duration-300 hover:bg-base-100"
-        :class="sidebarOpen ? 'left-[22.25rem]' : 'left-4'"
+        :class="sidebarOpen ? 'left-[24.25rem]' : 'left-4'"
         @click="sidebarOpen = !sidebarOpen"
         aria-label="Toggle sidebar"
       >
