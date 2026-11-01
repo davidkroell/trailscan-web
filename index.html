@@ -4,10 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>trailscan — GPX trail feature finder</title>
-    <link
-      rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236331fb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m8 3 4 8 5-5 5 15H2L8 3z'/%3E%3C/svg%3E"
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' 'sha256-MekhvMzarLVaYZwrnEokcj5zsqLg4pL7geBgt4V5u0g='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://*.tile.openstreetmap.org; connect-src 'self' https://overpass-api.de https://fonts.googleapis.com https://fonts.gstatic.com; object-src 'none'; base-uri 'self'; form-action 'self'"
     />
+    <link rel="icon" type="image/svg+xml" href="./icon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -167,8 +168,8 @@
               </span>
               <input
                 type="range"
-                min="1"
-                max="1000"
+                min="5"
+                max="500"
                 step="5"
                 class="range range-primary range-sm"
                 x-model.number="options.max_distance"
@@ -187,8 +188,8 @@
               </span>
               <input
                 type="range"
-                min="1"
-                max="1000"
+                min="5"
+                max="300"
                 step="5"
                 class="range range-accent range-sm"
                 x-model.number="options.max_elevation_diff"
@@ -400,6 +401,6 @@
       </div>
     </div>
 
-    <script type="module" src="/src/main.js"></script>
+    <script type="module" src="./src/main.js"></script>
   </body>
 </html>

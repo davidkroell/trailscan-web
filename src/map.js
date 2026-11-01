@@ -27,6 +27,19 @@ const TRACK_COLORS = {
   dark: '#88f9c0', // tropical mint — visible on dark tiles
 }
 
+// Escapes user-controlled data before it is inserted into HTML (Leaflet
+// popups / divIcons accept raw HTML). Feature names and types originate from
+// OSM data, which is editable by anyone, so this must never be omitted.
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  })[c])
+}
+
 // TrailscanMap owns all Leaflet state (map, track layer, feature markers).
 // It is driven imperatively from Alpine state and never mirrored into it.
 export class TrailscanMap {
@@ -94,7 +107,7 @@ export class TrailscanMap {
         icon: featureIcon(feature.num),
         riseOnHover: true,
       }).bindPopup(
-        `<strong>${feature.name || feature.type}</strong><span style="opacity:.7">${feature.type}</span>`,
+        `<strong>${escapeHtml(feature.name || feature.type)}</strong><span style="opacity:.7">${escapeHtml(feature.type)}</span>`,
       )
       this.markersByNum.set(feature.num, marker)
       marker.addTo(this.map)
@@ -134,7 +147,7 @@ export class TrailscanMap {
 function featureIcon(num) {
   return L.divIcon({
     className: '',
-    html: `<div class="trail-marker"><span>${num}</span></div>`,
+    html: `<div class="trail-marker"><span>${escapeHtml(num)}</span></div>`,
     iconSize: [26, 26],
     iconAnchor: [13, 26],
     popupAnchor: [0, -24],

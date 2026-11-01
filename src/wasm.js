@@ -10,10 +10,10 @@ function loadGoWasm() {
     window.addEventListener('trailscan:ready', () => resolve(), { once: true })
 
     const script = document.createElement('script')
-    script.src = '/wasm_exec.js'
+    script.src = 'wasm_exec.js'
     script.onload = () => {
       const go = new window.Go()
-      WebAssembly.instantiateStreaming(fetch('/trailscan.wasm'), go.importObject)
+      WebAssembly.instantiateStreaming(fetch('trailscan.wasm'), go.importObject)
         .then((result) => go.run(result.instance))
         .catch(reject)
     }
